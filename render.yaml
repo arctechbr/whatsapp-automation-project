@@ -1,0 +1,67 @@
+# render.yaml
+# Arquivo de configuração para deploy no Render
+# Mais informações: https://render.com/docs/blueprint-spec
+
+services:
+  # ====================
+  # BANCO DE DADOS
+  # ====================
+  - name: postgres-whatsapp
+    type: pserv
+    plan: free # Plano gratuito (expira em 30 dias)
+    image:
+      url: postgres:15
+    envVars:
+      - key: POSTGRES_DB
+        value: whatsapp_automation
+      - key: POSTGRES_USER
+        value: automation_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true # Gera uma senha segura automaticamente
+
+  # ====================
+  # BACKEND (FastAPI)
+  # ====================
+  - name: backend-whatsapp
+    type: web
+    plan: free # Plano gratuito (750 horas/mês)
+    env: python
+    region: oregon # Escolha a região mais próxima
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          name: postgres-whatsapp
+          type: pserv
+          property: connectionString
+      - key: WHAPI_API_KEY
+        sync: false # Adicionar manualmente no dashboard
+      - key: SOURCE_GROUP_ID
+        sync: false # Adicionar manualmente no dashboard
+      - key: BOT_READER_NUMBER
+        sync: false # Adicionar manualmente no dashboard
+      - key: BOT_POSTER_NUMBER
+        sync: false # Adicionar manualmente no dashboard
+      - key: SECRET_KEY
+        generateValue: true # Gera uma chave secreta automaticamente
+      - key: CORS_ORIGINS
+        value: "*" # Permite todas as origens (ajuste em produção)
+      - key: ENVIRONMENT
+        value: production
+
+  # ====================
+  # FRONTEND (React)
+  # ====================
+  - name: frontend-whatsapp
+    type: web
+    plan: free
+    env: static
+    region: oregon
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
