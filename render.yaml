@@ -3,51 +3,49 @@
 
 services:
   # ====================
-  # BANCO DE DADOS (Corrigido)
+  # BANCO DE DADOS (PostgreSQL)
   # ====================
   - name: postgres-whatsapp
     type: pserv
-    plan: free # Plano gratuito (expira em 30 dias)
-    # Removida a propriedade 'image' para usar a imagem padrão do Render para pserv
+    plan: free
     envVars:
       - key: POSTGRES_DB
         value: whatsapp_automation
       - key: POSTGRES_USER
         value: automation_user
       - key: POSTGRES_PASSWORD
-        generateValue: true # Gera uma senha segura automaticamente
+        generateValue: true
 
   # ====================
-  # BACKEND (FastAPI) (Corrigido)
+  # BACKEND (FastAPI)
   # ====================
   - name: backend-whatsapp
     type: web
-    plan: free # Plano gratuito (750 horas/mês)
+    plan: free
     env: python
-    region: oregon # Escolha a região mais próxima
-    rootDir: backend # Adicionado para garantir que o build e start command funcionem
+    region: oregon
+    rootDir: backend
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
-      # Corrigido: Usar a variável de ambiente padrão do Render para a URL de conexão do banco
       - key: DATABASE_URL
         fromService:
           name: postgres-whatsapp
           type: pserv
           property: connectionString
       - key: WHAPI_API_KEY
-        sync: false # Adicionar manualmente no dashboard
+        sync: false
       - key: SOURCE_GROUP_ID
-        sync: false # Adicionar manualmente no dashboard
+        sync: false
       - key: BOT_READER_NUMBER
-        sync: false # Adicionar manualmente no dashboard
+        sync: false
       - key: BOT_POSTER_NUMBER
-        sync: false # Adicionar manualmente no dashboard
+        sync: false
       - key: SECRET_KEY
-        generateValue: true # Gera uma chave secreta automaticamente
+        generateValue: true
       - key: CORS_ORIGINS
-        value: "*" # Permite todas as origens (ajuste em produção)
+        value: "*"
       - key: ENVIRONMENT
         value: production
 
@@ -55,12 +53,12 @@ services:
   # FRONTEND (React) (Corrigido)
   # ====================
   - name: frontend-whatsapp
-    type: static_site
+    type: web # <-- CORRIGIDO (era 'static_site')
+    runtime: static # <-- ADICIONADO
     plan: free
-    # Removida a propriedade 'region' para serviços estáticos
-    rootDir: frontend # Adicionado para garantir que o build command funcione
+    rootDir: frontend
     buildCommand: "npm install && npm run build"
-    staticPublishPath: dist
+    publishDir: dist # <-- CORRIGIDO (era 'staticPublishPath')
     routes:
       - type: rewrite
         source: /*
