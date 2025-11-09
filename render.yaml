@@ -1,6 +1,4 @@
 # Arquivo de configuração para deploy no Render
-# Corrigido com base nos erros de validação
-
 services:
   # ====================
   # BANCO DE DADOS (PostgreSQL)
@@ -53,12 +51,12 @@ services:
   # FRONTEND (React) (Corrigido)
   # ====================
   - name: frontend-whatsapp
-    type: web # <-- CORRIGIDO (era 'static_site')
-    runtime: static # <-- ADICIONADO
+    type: web
+    runtime: static
     plan: free
     rootDir: frontend
     buildCommand: "npm install && npm run build"
-    publishDir: dist # <-- CORRIGIDO (era 'staticPublishPath')
+    publishDir: dist
     routes:
       - type: rewrite
         source: /*
