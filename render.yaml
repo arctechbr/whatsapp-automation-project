@@ -55,7 +55,7 @@ services:
   # FRONTEND (React) (Corrigido)
   # ====================
   - name: frontend-whatsapp
-    type: static
+    type: static_site
     plan: free
     # Removida a propriedade 'region' para serviços estáticos
     rootDir: frontend # Adicionado para garantir que o build command funcione
