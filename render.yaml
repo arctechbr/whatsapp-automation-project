@@ -1,10 +1,9 @@
 # render.yaml
 # Arquivo de configuração FINAL para deploy no Render
-# Inclui correções de sintaxe e interconexão de serviços (CORS e VITE_APP_BACKEND_URL)
 
 services:
   # ====================
-  # BANCO DE DADOS (PostgreSQL)
+  # BANCO DE DADOS
   # ====================
   - name: postgres-whatsapp
     type: pserv
@@ -18,7 +17,7 @@ services:
         generateValue: true
 
   # ====================
-  # BACKEND (FastAPI)
+  # BACKEND
   # ====================
   - name: backend-whatsapp
     type: web
@@ -30,21 +29,18 @@ services:
     startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
-      # Conexão com o banco de dados
       - key: DATABASE_URL
         fromService:
           name: postgres-whatsapp
           type: pserv
           property: connectionString
 
-      # CORS: Referencia ao frontend
       - key: CORS_ORIGINS
         fromService:
           name: frontend-whatsapp
-          type: static_site
+          type: web
           property: url
 
-      # Variáveis secretas (configurar manualmente no dashboard)
       - key: WHAPI_API_KEY
         sync: false
       - key: SOURCE_GROUP_ID
@@ -56,7 +52,6 @@ services:
       - key: SECRET_KEY
         generateValue: true
 
-      # Ambiente
       - key: ENVIRONMENT
         value: production
 
@@ -64,11 +59,13 @@ services:
   # FRONTEND (React/Vite)
   # ====================
   - name: frontend-whatsapp
-    type: static_site
+    type: web
+    env: static
     plan: free
     rootDir: frontend
     buildCommand: "npm install && npm run build"
     staticPublishPath: dist
+
     envVars:
       - key: VITE_APP_BACKEND_URL
         fromService:
