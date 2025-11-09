@@ -31,4 +31,52 @@ services:
     healthCheckPath: /health
     envVars:
       # Conexão com o banco de dados
-      - key: DATA
+      - key: DATABASE_URL
+        fromService:
+          name: postgres-whatsapp
+          type: pserv
+          property: connectionString
+
+      # CORS: Referencia ao frontend
+      - key: CORS_ORIGINS
+        fromService:
+          name: frontend-whatsapp
+          type: static_site
+          property: url
+
+      # Variáveis secretas (configurar manualmente no dashboard)
+      - key: WHAPI_API_KEY
+        sync: false
+      - key: SOURCE_GROUP_ID
+        sync: false
+      - key: BOT_READER_NUMBER
+        sync: false
+      - key: BOT_POSTER_NUMBER
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+      # Ambiente
+      - key: ENVIRONMENT
+        value: production
+
+  # ====================
+  # FRONTEND (React/Vite)
+  # ====================
+  - name: frontend-whatsapp
+    type: static_site
+    plan: free
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_APP_BACKEND_URL
+        fromService:
+          name: backend-whatsapp
+          type: web
+          property: url
+
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
