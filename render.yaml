@@ -1,16 +1,14 @@
-# render.yaml
 # Arquivo de configuração para deploy no Render
-# Mais informações: https://render.com/docs/blueprint-spec
+# Corrigido com base nos erros de validação
 
 services:
   # ====================
-  # BANCO DE DADOS
+  # BANCO DE DADOS (Corrigido)
   # ====================
   - name: postgres-whatsapp
     type: pserv
     plan: free # Plano gratuito (expira em 30 dias)
-    image:
-      url: postgres:15
+    # Removida a propriedade 'image' para usar a imagem padrão do Render para pserv
     envVars:
       - key: POSTGRES_DB
         value: whatsapp_automation
@@ -20,17 +18,19 @@ services:
         generateValue: true # Gera uma senha segura automaticamente
 
   # ====================
-  # BACKEND (FastAPI)
+  # BACKEND (FastAPI) (Corrigido)
   # ====================
   - name: backend-whatsapp
     type: web
     plan: free # Plano gratuito (750 horas/mês)
     env: python
     region: oregon # Escolha a região mais próxima
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    rootDir: backend # Adicionado para garantir que o build e start command funcionem
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
+      # Corrigido: Usar a variável de ambiente padrão do Render para a URL de conexão do banco
       - key: DATABASE_URL
         fromService:
           name: postgres-whatsapp
@@ -52,15 +52,15 @@ services:
         value: production
 
   # ====================
-  # FRONTEND (React)
+  # FRONTEND (React) (Corrigido)
   # ====================
   - name: frontend-whatsapp
-    type: web
+    type: static
     plan: free
-    env: static
-    region: oregon
-    buildCommand: "cd frontend && npm install && npm run build"
-    staticPublishPath: ./frontend/dist
+    # Removida a propriedade 'region' para serviços estáticos
+    rootDir: frontend # Adicionado para garantir que o build command funcione
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*
