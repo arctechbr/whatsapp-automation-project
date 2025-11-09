@@ -51,12 +51,12 @@ services:
   # FRONTEND (React) (Corrigido)
   # ====================
   - name: frontend-whatsapp
-    type: web
-    runtime: static
+    type: static # <--- CORREÇÃO 1: Mudar para 'static'
     plan: free
+    # REMOVER: runtime: static
     rootDir: frontend
     buildCommand: "npm install && npm run build"
-    publishDir: dist
+    staticPublishPath: dist # <--- CORREÇÃO 2: Mudar para 'staticPublishPath'
     routes:
       - type: rewrite
         source: /*
